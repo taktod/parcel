@@ -5,6 +5,7 @@ const url = require('url');
 const serveStatic = require('serve-static');
 const getPort = require('get-port');
 const serverErrors = require('./utils/customErrors').serverErrors;
+const fs = require('fs');
 
 function middleware(bundler) {
   const serve = serveStatic(bundler.options.outDir, {index: false});
