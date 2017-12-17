@@ -1,4 +1,5 @@
 const http = require('http');
+const https = require('https');
 const path = require('path');
 const url = require('url');
 const serveStatic = require('serve-static');
@@ -58,7 +59,32 @@ function middleware(bundler) {
 
 async function serve(bundler, port) {
   let freePort = await getPort({port});
-  let server = http.createServer(middleware(bundler)).listen(freePort);
+  let options = bundler.options;
+  let server = undefined;
+  if (options.https) {
+    if (options.key != undefined && options.cert != undefined) {
+      server = https
+        .createServer(
+          {
+            key: fs.readFileSync(options.key),
+            cert: fs.readFileSync(options.cert)
+          },
+          middleware(bundler)
+        )
+        .listen(freePort);
+    } else if (options.pfx != undefined) {
+      server = https
+        .createServer(
+          {
+            pfx: fs.readFileSync(options.pfx)
+          },
+          middleware(bundler)
+        )
+        .listen(freePort);
+    }
+  } else {
+    server = http.createServer(middleware(bundler)).listen(freePort);
+  }
 
   server.on('error', err => {
     bundler.logger.error(new Error(serverErrors(err, server.address().port)));
@@ -71,11 +97,19 @@ async function serve(bundler, port) {
             `configured port ${port} could not be used.`
           )}`
         : '';
-    bundler.logger.persistent(
-      `Server running at ${bundler.logger.chalk.cyan(
-        `http://localhost:${server.address().port}`
-      )} ${addon}\n`
-    );
+    if (options.https) {
+      bundler.logger.persistent(
+        `Server running at ${bundler.logger.chalk.cyan(
+          `https://localhost:${server.address().port}`
+        )} ${addon}\n`
+      );
+    } else {
+      bundler.logger.persistent(
+        `Server running at ${bundler.logger.chalk.cyan(
+          `http://localhost:${server.address().port}`
+        )} ${addon}\n`
+      );
+    }
   });
 
   return server;

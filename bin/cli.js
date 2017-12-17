@@ -22,6 +22,10 @@ program
   )
   .option('--no-hmr', 'disable hot module replacement')
   .option('--no-cache', 'disable the filesystem cache')
+  .option('--https', 'use https')
+  .option('--cert <cert>', 'certificate for https')
+  .option('--key <key>', 'key for https')
+  .option('--pfx <pfx>', 'pfx for https')
   .option('-V, --version', 'output the version number')
   .action(bundle);
 
